@@ -6,29 +6,17 @@
 
 {% block content %}
 <h1 class="display-3">LOGIN</h1>
-<form>
-    <!-- <div class="form-group">
-    <label for="name" class="form-label">NAME</label>
-    <input type="text" name="name" class="form-control"><br>
-    </div> -->
-
+<form method="post" action="{{ url_for('login_post') }}">
     <div class="form-group">
-    <label for="USERNAME" class="form-label">USERNAME</label>
-    <input type="text" name="USERNAME" class="form-control" required><br>
+        <label for="USERNAME" class="form-label">USERNAME</label>
+        <input type="text" name="username" class="form-control" required><br>
     </div>
-
     <div class="form-group">
-    <label for="PASSWORD" class="form-label">PASSWORD</label>
-    <input type="password" name="PASSWORD" class="form-control" required><br>
+        <label for="PASSWORD" class="form-label">PASSWORD</label>
+        <input type="password" name="password" class="form-control" required><br>
     </div>
-
-    <!-- <div class="form-group">
-    <label for="CONFIRM_PASSWORD" class="form-label">CONFIRM PASSWORD</label>
-    <input type="password" name="CONFIRM_PASSWORD" class="form-control" required><br>
-    </div> -->
-
     <div class="form-group">
-    <button type="submit" class="btn btn-primary">LOGIN</button>
+        <button type="submit" class="btn btn-primary">LOGIN</button>
     </div>
 </form>
 {% endblock %}
