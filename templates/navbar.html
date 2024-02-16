@@ -6,9 +6,14 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
+          {% if 'userid' in session %}
           <a class="nav-link active" aria-current="page" href="{{url_for('index')}}">HOME</a>
+          <a class="nav-link active" aria-current="page" href="{{url_for('profile')}}">PROFILE</a>
+          <a class="nav-link" href="{{url_for('logout')}}">LOGOUT</a>
+          {% else %}
           <a class="nav-link" href="{{url_for('login')}}">LOGIN</a>
           <a class="nav-link" href="{{url_for('register')}}">REGISTER</a>
+          {% endif %}
         </div>
       </div>
     </div>

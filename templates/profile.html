@@ -1,0 +1,32 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    PROFILE
+{% endblock %}
+
+{% block content %}
+    <h2>WELCOME {{user.username }}</h2>
+    <a class="btn btn-primary" href="{{url_for('logout')}}" role="button">Logout</a>
+    <!-- form to change username and password -->
+    <form method="post">
+        <div class="form-group">
+            <label for="USERNAME" class="form-label">USERNAME</label>
+            <input type="text" name="username" class="form-control" required><br>
+        </div>
+        <div class="form-group">
+            <label for="CPASSWORD" class="form-label">CURRENT PASSWORD</label>
+            <input type="password" name="cpassword" class="form-control" required><br>
+        </div>
+        <div class="form-group">
+            <label for="NEW_PASSWORD" class="form-label">NEW PASSWORD</label>
+            <input type="password" name="new_password" class="form-control" required><br>
+        </div>
+        <div class="form-group">
+            <label for="name" class="form-label">NAME</label>
+            <input type="text" name="name" class="form-control" ><br>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">UPDATE PROFILE</button>
+    </div>
+    </form>
+{% endblock %}
