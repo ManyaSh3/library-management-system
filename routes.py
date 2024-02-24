@@ -72,10 +72,31 @@ def auth_required(func):
             flash('Please login to continue')
             return redirect(url_for('login'))
     return inner
+#decorator to check if user is admin
+
+def librarian_required(func):
+    @wraps(func)
+    def inner(*args, **kwargs):
+        if 'userid' in session:
+            user=User.query.get(session['userid'])
+            if user.is_librarian:
+                return func(*args, **kwargs)
+            else:
+                flash('You are not authorized to access this page')
+                return redirect(url_for('index'))
+        else:
+            flash('Please login to continue')
+            return redirect(url_for('login'))
+    return inner
+
+
 
 @app.route('/')
 @auth_required
 def index():
+    user=User.query.get(session['userid'])
+    if user.is_librarian:
+        return redirect(url_for('librarian'))
     # if 'userid' in session:
     return render_template('index.html')
     
@@ -117,10 +138,39 @@ def profile_post():
     flash('Profile updated')
     return redirect(url_for('profile'))
 
-
-
 @app.route('/logout')
 @auth_required
 def logout():
     session.pop('userid',None)
     return redirect(url_for('login'))
+
+@app.route('/librarian')
+@librarian_required
+def librarian():
+    return render_template('librarian.html')
+
+@app.route('/section/add')
+@librarian_required
+def add_section():
+    return render_template('sections/add_section.html')
+
+@app.route('/section/add', methods=['POST'])
+@librarian_required
+def add_section_post():
+    return "Add section"
+
+@app.route('/section/<int:section_id>')
+@librarian_required
+def view_section(section_id):
+    return "View section"
+
+@app.route('/section/<int:section_id>/edit')
+@librarian_required
+def edit_section(section_id):
+    return "Edit section"
+
+@app.route('/section/<int:section_id>/delete')
+@librarian_required
+def delete_section(section_id):
+    return "Delete section"
+
