@@ -1,8 +1,9 @@
 from flask import render_template,request,redirect,url_for,flash,session
 from app import app
-from models import db,User
+from models import db,User,Section,Book
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from datetime import datetime
 
 
 
@@ -147,7 +148,8 @@ def logout():
 @app.route('/librarian')
 @librarian_required
 def librarian():
-    return render_template('librarian.html')
+    sections=Section.query.all()
+    return render_template('librarian.html' , sections=sections)
 
 @app.route('/section/add')
 @librarian_required
@@ -157,7 +159,25 @@ def add_section():
 @app.route('/section/add', methods=['POST'])
 @librarian_required
 def add_section_post():
-    return "Add section"
+    section_name = request.form.get('title')
+    date_str = request.form.get('date_created')
+    description = request.form.get('description')
+
+
+    try:
+        date = datetime.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        flash('Invalid date format. Please use YYYY-MM-DD format.')
+        return redirect(url_for('add_section'))
+
+    if not section_name or not date_str or not description:
+        flash('Please fill out all fields')
+        return redirect(url_for('add_section'))
+    section=Section(title=section_name,date_created=date,description=description)
+    db.session.add(section)
+    db.session.commit()
+    flash('Section added successfully')
+    return redirect(url_for('librarian'))
 
 @app.route('/section/<int:section_id>')
 @librarian_required
@@ -167,10 +187,70 @@ def view_section(section_id):
 @app.route('/section/<int:section_id>/edit')
 @librarian_required
 def edit_section(section_id):
-    return "Edit section"
+    section=Section.query.get(section_id)
+    if not section:
+        flash('Section not found')
+        return redirect(url_for('librarian'))
+    return render_template('sections/edit_section.html',section=section)
+
+@app.route('/section/<int:section_id>/edit', methods=['POST'])
+@librarian_required
+def edit_section_post(section_id):
+    section_name = request.form.get('title')
+    description = request.form.get('description')
+
+    if not section_name or not description:
+        flash('Please fill out all fields')
+        return redirect(url_for('edit_section', section_id=section_id))
+
+    section = Section.query.get(section_id)
+    section.title = section_name
+    section.description = description
+    db.session.commit()
+    flash('Section updated successfully')
+    return redirect(url_for('librarian'))
 
 @app.route('/section/<int:section_id>/delete')
 @librarian_required
 def delete_section(section_id):
-    return "Delete section"
+    section = Section.query.get(section_id)
+    if not section:
+        flash('Section not found')
+        return redirect(url_for('librarian'))
+    return render_template('sections/delete_section.html', section=section)
 
+@app.route('/section/<int:section_id>/delete', methods=['POST'])
+@librarian_required
+def delete_section_post(section_id):
+    section = Section.query.get(section_id)
+    if not section:
+        flash('Section not found')
+    db.session.delete(section)
+    db.session.commit()
+    flash('Section deleted successfully')
+    return redirect(url_for('librarian'))
+
+#routes for books
+
+@app.route('/book/add_books')
+@librarian_required
+def add_books():
+    return render_template('books/add_books.html')
+
+@app.route('/book/add_books', methods=['POST'])
+@librarian_required
+def add_books_post():
+    title = request.form.get('title')
+    author = request.form.get('author')
+    content=request.form.get('content')
+    # description = request.form.get('description')
+
+    if not title or not author or not content:
+        flash('Please fill out all fields')
+        return redirect(url_for('add_books'))
+
+    book = Book(title=title, author=author, content=content)
+    db.session.add(book)
+    db.session.commit()
+    flash('Book added successfully')
+    return redirect(url_for('librarian'))

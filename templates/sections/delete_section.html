@@ -1,0 +1,26 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Delete Section
+{% endblock %}
+
+
+{% block content %}
+    <h1>Delete Section</h1>
+    
+    <p class="text-danger">Are you sure you want to delete {{section.title}}?</p>
+    <form method="POST" class="form">  
+        
+        <a href="{{url_for('librarian')}}" class="btn btn-secondary">Cancel</a>   
+    <br><br>
+        <div class="add-btn"> 
+        </i>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-trash"></i> 
+            Delete
+        </button>
+        </div>
+    </div>
+    </form>
+    </div>
+    
+{% endblock %}

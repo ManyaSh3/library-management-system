@@ -6,7 +6,7 @@
     <style>
         #add-btn{
             float: right;
-            font: 400 18px/1.5 'Lato',;
+            font: 400 18px/1.5 'Lato';
         }
         .centered {
             text-align: center;
@@ -15,57 +15,58 @@
     </style>
 {% endblock %}
 {% block content %}
-<div class="centered">
-    <h1>Librarian</h1>
-    <p>Welcome to the librarian area</p>
-</div>
-    <a href="{{url_for('add_section')}}">
+    <div class="centered">
+        <h1>Librarian</h1>
+        <p>Welcome to the librarian area</p>
+    </div>
+    <a href="{{ url_for('add_section') }}">
         <button type="button" id="add-btn" class="btn btn-info">
-            <i class="fas fa-plus">
-            Add Section!
-            </i>
+            <i class="fas fa-plus"></i> Add Section!
         </button>
-    </a href>
+    </a>
+    <br><br>
+    <a href="{{ url_for('add_books') }}">
+        <button type="button" id="add-btn" class="btn btn-info">
+            <i class="fas fa-plus"></i> Add Books!
+        </button>
+    </a>
 
-<h3>Sections</h3>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th scope="col"> Section ID</th>
-            <th scope="col">Section Name </th>
-            <th scope="col">Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for section in sections %}
-        <tr>
-            <th scope="row">{{section.id}}</th>
-            <td>{{section.section}}</td>
-            <td>
-                <a href = "{{url_for('view_books', id=section.id)}}">
-                    <button type="button" class="btn btn-primary">
-                        <i class="fas fa-eye">
-                        View 
-                        </i>
-                    </button>
-                </a href>
+    <h3>Sections</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Section ID</th>
+                <th>Section Name</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for section in sections %}
+            <tr>
+                <td>{{ section.id }}</td>
+                <td>{{ section.title }}</td>
+                <td>
+                    <a href="{{ url_for('view_section', section_id=section.id) }}">
 
-                <a href="{{url_for('edit_section', id=section.id)}}">
-                    <button type="button" class="btn btn-warning">
-                        <i class="fas fa-edit">
-                        Edit
-                        </i>
-                    </button>
-                </a href>
-                <a href="{{url_for('delete_section', id=section.id)}}">
-                    <button type="button" class="btn btn-danger">
-                        <i class="fas fa-trash">
-                        Delete
-                        </i>
-                    </button>
-                </a href>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-    {% endblock %}
+                        <button type="button" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </a>
+
+                    <a href="{{ url_for('edit_section', section_id=section.id) }}">
+                        <button type="button" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                    </a>
+
+                    <a href="{{ url_for('delete_section', section_id=section.id) }}">
+                        <button type="button" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

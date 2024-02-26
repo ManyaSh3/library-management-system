@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 {% block title %}
-    Add Section
+    Edit Section
 {% endblock %}
 {% block style %}
     <style>
@@ -16,17 +16,13 @@
     </style>
 {% endblock %}
 {% block content %}
-    <h1>Add New Section</h1>
+    <h1>Edit Section</h1>
     
     <form method="POST">
         <div class="containers">
         <div class="mb-3">
             <label for="title" class="form-label">Title</label>
             <input type="text" class="form-control" id="title" name="title" required>
-        </div>
-        <div class="mb-3">
-            <label for="date_created" class="form-label">Date Created</label>
-            <input type="date" class="form-control" id="date_created" name="date_created" required>
         </div>
         <div class="mb-3">
             <label for="add_image" class="form-label">Add Image</label>
@@ -38,7 +34,7 @@
         </div>        
         <a href="{{url_for('librarian')}}" class="btn btn-secondary">Cancel</a>
         <div class="add-btn">
-            <button type="submit" class="btn btn-primary">Add</button>
+            <button type="submit" class="btn btn-primary">Update</button>
         </div>
     </div>
     </form>
