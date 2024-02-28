@@ -25,11 +25,6 @@
         </button>
     </a>
     <br><br>
-    <a href="{{ url_for('add_books') }}">
-        <button type="button" id="add-btn" class="btn btn-info">
-            <i class="fas fa-plus"></i> Add Books!
-        </button>
-    </a>
 
     <h3>Sections</h3>
     <table class="table">
@@ -37,6 +32,7 @@
             <tr>
                 <th>Section ID</th>
                 <th>Section Name</th>
+                <th>Number of books</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -45,6 +41,7 @@
             <tr>
                 <td>{{ section.id }}</td>
                 <td>{{ section.title }}</td>
+                <td>{{ section.books|length }}</td>
                 <td>
                     <a href="{{ url_for('view_section', section_id=section.id) }}">
 
@@ -64,6 +61,10 @@
                             <i class="fas fa-trash"></i> Delete
                         </button>
                     </a>
+                    <a href="{{ url_for('add_books') }}">
+                        <button type="button" class="btn btn-info">
+                            <i class="fas fa-plus"></i> Add Books
+                        </button>
                 </td>
             </tr>
             {% endfor %}

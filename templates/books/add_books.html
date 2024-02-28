@@ -4,15 +4,18 @@ Add Books
 {% endblock %}
 {% block style %}
 <style>
-    .add-btn {
-        float: right;
-    }
-
     .containers {
         border: 1px solid #454251;
         padding: 20px;
         margin: 10px;
         border-radius: 25px;
+        position: relative; 
+    }
+
+    .add-btn {
+        position: absolute; 
+        bottom: 10px; 
+        right: 10px; 
     }
 </style>
 {% endblock %}
@@ -20,49 +23,44 @@ Add Books
 {% block content %}
 <h1>Add New Books</h1>
 
-<form method="POST">
+<form method="POST" action="/book/add/">
     <div class="containers">
-        <div class="mb-3">
-            <label for="title" class="form-label">Title</label>
-            <input type="text" class="form-control" id="title" name="title" required>
+        <div class="mb-3">            
+            <label for="title" class="form-label">Title:</label>
+            <input type="text" id="title" name="title" class="form-control" required><br>
         </div>
+
         <div class="mb-3">
-            <label for="author" class="form-label">Author</label>
-            <input type="text" class="form-control" id="author" name="author" required>
+            <label for="author" class="form-label">Author:</label>
+            <input type="text" id="author" name="author" class="form-control" required><br>
         </div>
+
         <div class="mb-3">
-            <label for="date_published" class="form-label">Date Published</label>
-            <input type="date" class="form-control" id="date_published" name="date_published" required>
+            <label for="content" class="form-label">Content:</label>
+            <textarea id="content" name="content" class="form-control"></textarea><br>
         </div>
+
         <div class="mb-3">
-            <label for="publisher" class="form-label">Publisher</label>
-            <input type="text" class="form-control" id="publisher" name="publisher" required>
+            <label for="date_created" class="form-label">Date Created:</label>
+            <input type="date" id="date_created" class="form-control" name="date_created" required><br>
         </div>
+
         <div class="mb-3">
-            <label for="content" class="form-label">Content</label>
-            <textarea class="form-control" id="content" name="content"></textarea>
-        </div>
-        <!-- <div class="mb-3">
-            <label for="section" class="form-label">Section</label>
-            <select class="form-select" id="section" name="section" required>
-                <option value="">Select Section</option>
+            <label for="Section" class="form-label">Section:</label>
+            <select name="section" id="section" class="form-control">
                 {% for section in sections %}
-                <option value="{{ section.id }}">{{ section.title }}</option>
+                {% if section.id == section_id %}
+                <option value="{{ section.id }}" selected>{{ section.title }}</option>
+                {% else %}
+                    <option value="{{ section.id }}">{{ section.title }}</option>
+                {% endif %}
                 {% endfor %}
             </select>
-        </div> -->
-        <div class="mb-3">
-            <label for="add_image" class="form-label">Add Image</label>
-            <input type="file" class="form-control" id="add_image" name="add_image">
+
         </div>
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea class="form-control" id="description" name="description"></textarea>
-        </div>
-        <a href="{{url_for('librarian')}}" class="btn btn-secondary">Cancel</a>
-        <div class="add-btn">
-            <button type="submit" class="btn btn-primary">Add</button>
-        </div>
+
+        <input type="submit" value="Add Book" class="btn btn-primary">
     </div>
 </form>
+
 {% endblock %}

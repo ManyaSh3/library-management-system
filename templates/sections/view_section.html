@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Books
+{% endblock %}
+{% block style %}
+    <style>
+        #add-btn{
+            float: right;
+            font: 400 18px/1.5 'Lato';
+        }
+        .centered {
+            text-align: center;
+        }
+        
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="centered">
+        <h1>Books of Section {{ section.title }}</h1>
+    </div>
+    <a href="{{ url_for('add_section') }}">
+        <button type="button" id="add-btn" class="btn btn-info">
+            <i class="fas fa-plus"></i> Add Section!
+        </button>
+    </a>
+    <br><br>
+
+    <h3>Books</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Book ID</th>
+                <th>Book Name</th>
+                <th>Author</th>
+                <th>Date_created</th>
+                <th>Content</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in section.books %}
+            <tr>
+                <td>{{ book.id }}</td>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author }}</td>
+                <td>{{ book.date_created }}</td>
+                <td>{{ book.content }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

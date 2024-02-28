@@ -182,7 +182,12 @@ def add_section_post():
 @app.route('/section/<int:section_id>')
 @librarian_required
 def view_section(section_id):
-    return "View section"
+    sections=Section.query.get(section_id)
+    if not sections:
+        flash('Section not found')
+        return redirect(url_for('librarian'))
+    books=Book.query.filter_by(section_id=section_id).all()
+    return render_template('sections/view_section.html',section=sections,books=books)
 
 @app.route('/section/<int:section_id>/edit')
 @librarian_required
@@ -232,24 +237,36 @@ def delete_section_post(section_id):
 
 #routes for books
 
-@app.route('/book/add_books')
+@app.route('/book/add')
 @librarian_required
 def add_books():
+    sections=Section.query.all()
+    if not sections:
+        flash('No sections found. Please add a section first')
+        return redirect(url_for('librarian'))
     return render_template('books/add_books.html')
 
-@app.route('/book/add_books', methods=['POST'])
+@app.route('/book/add', methods=['POST'])
 @librarian_required
 def add_books_post():
     title = request.form.get('title')
     author = request.form.get('author')
     content=request.form.get('content')
-    # description = request.form.get('description')
+    str_date=request.form.get('date_created')
+    section_id=request.form.get('section_id')
 
-    if not title or not author or not content:
+    try:
+        date = datetime.strptime(str_date, '%Y-%m-%d')
+    except ValueError:
+        flash('Invalid date format. Please use YYYY-MM-DD format.')
+        return redirect(url_for('add_books'))
+    
+
+    if not title or not author or not content or not str_date or not section_id:
         flash('Please fill out all fields')
         return redirect(url_for('add_books'))
 
-    book = Book(title=title, author=author, content=content)
+    book = Book(title=title, author=author, content=content , date_created=date, section_id=section_id)
     db.session.add(book)
     db.session.commit()
     flash('Book added successfully')
