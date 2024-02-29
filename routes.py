@@ -237,14 +237,17 @@ def delete_section_post(section_id):
 
 #routes for books
 
-@app.route('/book/add')
+@app.route('/book/add/<int:section_id>')
 @librarian_required
-def add_books():
-    sections=Section.query.all()
-    if not sections:
+def add_books(section_id):
+    sections = Section.query.all()
+    section=Section.query.get(section_id)
+    if not section:
         flash('No sections found. Please add a section first')
         return redirect(url_for('librarian'))
-    return render_template('books/add_books.html')
+    now = datetime.now().strftime('%Y-%m-%d')
+    return render_template('books/add_books.html' , sections=sections , now=now , section=section)
+
 
 @app.route('/book/add', methods=['POST'])
 @librarian_required
@@ -271,3 +274,67 @@ def add_books_post():
     db.session.commit()
     flash('Book added successfully')
     return redirect(url_for('librarian'))
+
+@app.route('/book/<int:book_id>/edit')
+@librarian_required
+def edit_book(book_id):
+    book = Book.query.get(book_id)
+    if not book:
+        flash('Book not found')
+        return redirect(url_for('librarian'))
+    sections = Section.query.all()
+    return render_template('books/edit_book.html', book=book, sections=sections)
+
+@app.route('/book/<int:book_id>/edit', methods=['POST'])
+@librarian_required
+def edit_book_post(book_id):
+    title = request.form.get('title')
+    author = request.form.get('author')
+    content = request.form.get('content')
+    str_date = request.form.get('date_created')
+    section_id = request.form.get('section_id')
+
+    try:
+        date = datetime.strptime(str_date, '%Y-%m-%d')
+    except ValueError:
+        flash('Invalid date format. Please use YYYY-MM-DD format.')
+        return redirect(url_for('edit_book', book_id=book_id))
+
+    if not title or not author or not content or not str_date or not section_id:
+        flash('Please fill out all fields')
+        return redirect(url_for('edit_book', book_id=book_id))
+
+    book = Book.query.get(book_id)
+    book.title = title
+    book.author = author
+    book.content = content
+    book.date_created = date
+    book.section_id = section_id
+    db.session.commit()
+    flash('Book updated successfully')
+    return redirect(url_for('librarian'))
+
+@app.route('/book/<int:book_id>/delete')
+@librarian_required
+def delete_book(book_id):
+    book = Book.query.get(book_id)
+    if not book:
+        flash('Book not found')
+        return redirect(url_for('librarian'))
+    return render_template('books/delete_book.html', book=book)
+
+@app.route('/book/<int:book_id>/delete', methods=['POST'])
+@librarian_required
+def delete_book_post(book_id):
+    book = Book.query.get(book_id)
+    if book is not None:
+        db.session.delete(book)
+        db.session.commit()
+        flash('Book deleted successfully')
+        return redirect(url_for('librarian'))
+    else:
+        flash('Book not found')
+        return redirect(url_for('librarian'))
+    
+ 
+

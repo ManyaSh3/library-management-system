@@ -23,7 +23,7 @@ Add Books
 {% block content %}
 <h1>Add New Books</h1>
 
-<form method="POST" action="/book/add/">
+<form method="POST" action="{{url_for('add_books_post')}}">
     <div class="containers">
         <div class="mb-3">            
             <label for="title" class="form-label">Title:</label>
@@ -42,23 +42,26 @@ Add Books
 
         <div class="mb-3">
             <label for="date_created" class="form-label">Date Created:</label>
-            <input type="date" id="date_created" class="form-control" name="date_created" required><br>
+            <input type="date" id="date_created" class="form-control" name="date_created" 
+            value="{{ now }}"
+             required><br>
         </div>
 
         <div class="mb-3">
-            <label for="Section" class="form-label">Section:</label>
-            <select name="section" id="section" class="form-control">
-                {% for section in sections %}
-                {% if section.id == section_id %}
-                <option value="{{ section.id }}" selected>{{ section.title }}</option>
+            <label for="section_id" class="form-label">Section:</label>
+            <select name="section_id" id="section_id" class="form-control" required>
+                {% for sect in sections %}
+                {% if sect.id == section.id %}
+                    <option selected value="{{ sect.id }}">{{ sect.title }}</option>
                 {% else %}
-                    <option value="{{ section.id }}">{{ section.title }}</option>
+                    <option value="{{ sect.id }}">{{ sect.title }}</option>
                 {% endif %}
                 {% endfor %}
             </select>
 
         </div>
-
+    
+        <a href="{{url_for('librarian')}}" class="btn btn-secondary">Cancel</a>
         <input type="submit" value="Add Book" class="btn btn-primary">
     </div>
 </form>
