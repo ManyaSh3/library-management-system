@@ -1,1 +1,53 @@
-edit book
+{% extends 'layout.html' %}
+{% block title %}
+    Edit Book
+{% endblock %}
+{% block style %}
+    <style>
+        .add-btn{
+            float: right;
+        }
+        .containers{
+            border: 1px solid #454251;
+            padding: 20px; 
+            margin: 10px; 
+            border-radius: 25px;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <h1>Edit Book ({{books.title}})</h1>
+    
+    <form method="POST">
+        <div class="containers">
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+        <div class="mb-3">
+            <label for="author" class="form-label">Author</label>
+            <input type="text" class="form-control" id="author" name="author" required>
+            
+        </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">Content</label>
+            <textarea class="form-control" id="content" name="content"></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="section_id" class="form-label">Section ID</label>
+            <select class="form-select" id="section_id" name="section_id">
+                {% for section in sections %}
+                    <option value="{{section.id}}">{{section.id}}</option>
+                {% endfor %}
+            </select>
+
+        </div>
+        <a href="{{url_for('librarian')}}" class="btn btn-secondary">Cancel</a>
+        <div class="add-btn">
+            <button type="submit" class="btn btn-primary">Update</button>
+        </div>
+    </div>
+    </form>
+    </div>
+    
+{% endblock %}

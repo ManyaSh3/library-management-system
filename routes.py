@@ -283,7 +283,7 @@ def edit_book(book_id):
         flash('Book not found')
         return redirect(url_for('librarian'))
     sections = Section.query.all()
-    return render_template('books/edit_book.html', book=book, sections=sections)
+    return render_template('books/edit_book.html', books=book, sections=sections)
 
 @app.route('/book/<int:book_id>/edit', methods=['POST'])
 @librarian_required
@@ -291,16 +291,9 @@ def edit_book_post(book_id):
     title = request.form.get('title')
     author = request.form.get('author')
     content = request.form.get('content')
-    str_date = request.form.get('date_created')
     section_id = request.form.get('section_id')
 
-    try:
-        date = datetime.strptime(str_date, '%Y-%m-%d')
-    except ValueError:
-        flash('Invalid date format. Please use YYYY-MM-DD format.')
-        return redirect(url_for('edit_book', book_id=book_id))
-
-    if not title or not author or not content or not str_date or not section_id:
+    if not title or not section_id:
         flash('Please fill out all fields')
         return redirect(url_for('edit_book', book_id=book_id))
 
@@ -308,7 +301,7 @@ def edit_book_post(book_id):
     book.title = title
     book.author = author
     book.content = content
-    book.date_created = date
+
     book.section_id = section_id
     db.session.commit()
     flash('Book updated successfully')
