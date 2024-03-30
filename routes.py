@@ -1,6 +1,6 @@
 from flask import render_template,request,redirect,url_for,flash,session
 from app import app
-from models import db,User,Section,Book
+from models import db,User,Section,Book,book_issue,book_request,book_rating,book_feedback,transaction_history,book_return
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
@@ -90,16 +90,6 @@ def librarian_required(func):
             return redirect(url_for('login'))
     return inner
 
-
-
-@app.route('/')
-@auth_required
-def index():
-    user=User.query.get(session['userid'])
-    if user.is_librarian:
-        return redirect(url_for('librarian'))
-    # if 'userid' in session:
-    return render_template('index.html')
     
     
 @app.route('/profile')
@@ -330,4 +320,164 @@ def delete_book_post(book_id):
         return redirect(url_for('librarian'))
     
  
+#routes for users
+    
+@app.route('/')
+@auth_required
+def index():
+    user = User.query.get(session.get('userid'))
 
+    # Check if user exists
+    if not user:
+        flash('User not found. Please log in again.')
+        return redirect(url_for('login'))
+
+    if user.is_librarian:
+        return redirect(url_for('librarian'))
+    
+    sections = Section.query.all()
+    books = Book.query.all()
+
+    cname = request.args.get('cname') or ''
+    pname = request.args.get('pname') or ''
+
+    all_sections = Section.query.all()
+
+    if cname:
+        sections = Section.query.filter(Section.title.ilike(f'%{cname}%')).all()
+
+    if pname:
+        books = Book.query.filter(Book.title.ilike(f'%{pname}%')).all()
+    
+    return render_template('index.html', user=user, sections=sections, books=books, cname=cname, pname=pname , all_sections=all_sections)
+
+
+# @app.route('/borrow_book/<int:book_id>', methods=['GET','POST'])
+# @auth_required
+# def borrow_book(book_id):
+#     book = Book.query.get(book_id)
+#     if not book:
+#         flash('Book not found')
+#         return redirect(url_for('index'))
+    
+#     # Check if the book is already borrowed
+#     borrowed_book = book_issue.query.filter_by(book_id=book_id, user_id=session.get('userid')).first()
+#     if borrowed_book:
+#         flash('You have already borrowed this book')
+#         return redirect(url_for('index'))
+#     issued_books_count = book_issue.query.filter_by(user_id=session.get('userid'), status=True).count()
+
+#     if issued_books_count >= 5:
+#         flash('You have already issued 5 books. Return some before issuing more.')
+#         return redirect(url_for('index'))
+#     # Issue the book
+#     new_borrowed_book = book_issue(book_id=book_id, user_id=session.get('userid'), date_issued=datetime.now(), date_return=datetime.now())
+#     db.session.add(new_borrowed_book)
+#     db.session.commit()
+#     flash('Book borrowed successfully')
+#     return redirect(url_for('index'))
+
+
+@app.route('/return_book/<int:book_id>', methods=['POST'])
+@auth_required  
+def return_book(book_id):
+    book = Book.query.get(book_id)
+
+    if not book:
+        flash('Book not found')
+        return redirect(url_for('index'))
+
+    # Check if the book is borrowed by the current user
+    borrowed_book = book_issue.query.filter_by(id=book_id, user_id=session.get('userid')).first()
+
+    if not borrowed_book:
+        flash('You have not borrowed this book')
+        return redirect(url_for('index'))
+
+    # Remove the association between the user and the book by deleting the book_issue record
+    db.session.delete(borrowed_book)
+    db.session.commit()
+
+    flash('Book returned successfully')
+    return redirect(url_for('index'))
+
+
+
+@app.route('/borrowed_books')
+@auth_required
+def borrowed_books():
+    user_id = session.get('userid')    
+    borrowed_books = book_issue.query.filter_by(user_id=user_id, status=True).all()
+    return render_template('borrowed_books.html', borrowed_books=borrowed_books)
+
+@app.route('/request_book/<int:book_id>', methods=['POST'])
+@auth_required
+def request_book(book_id):
+    book = Book.query.get(book_id)
+    if not book:
+        flash('Book not found')
+        return redirect(url_for('index'))
+    
+    # Request the book
+    new_borrowed_book = book_request(book_id=book_id, user_id=session.get('userid'), date_requested=datetime.now(), status=True)
+    db.session.add(new_borrowed_book)
+    db.session.commit()
+    flash('Book requested successfully')
+
+    return redirect(url_for('index'))
+
+@app.route('/requested_books')
+@librarian_required
+def requested_books():
+    requested_books = book_request.query.filter_by(status=True).all()
+    return render_template('review_book.html', requested_books=requested_books)
+
+@app.route('/cancel_request/<int:book_id>', methods=['POST'])
+@librarian_required
+def cancel_request(book_id):
+    book = Book.query.get(book_id)
+    if not book:
+        flash('Book not found')
+        return redirect(url_for('librarian'))
+    
+    # Check if the book is requested by the current user
+    requested_book = book_request.query.filter_by(book_id=book_id).first()
+
+    if not requested_book:
+        flash('You have not requested this book')
+        return redirect(url_for('librarian'))
+    
+    # Remove the association between the user and the book by deleting the book_request record
+    db.session.delete(requested_book)
+    db.session.commit()
+
+    flash('Book request cancelled successfully')
+    return redirect(url_for('librarian'))
+
+
+@app.route('/approve_request/<int:book_id>', methods=['POST'])
+@librarian_required
+def approve_request(book_id):
+    book = Book.query.get(book_id)
+    if not book:
+        flash('Book not found')
+        return redirect(url_for('librarian'))
+    
+    # Check if the book is requested by the current user
+    requested_book = book_request.query.filter_by(book_id=book_id).first()
+    add_book=book_issue(book_id=book_id, user_id=requested_book.user_id, date_issued=datetime.now(), date_return=datetime.now(),status=True)
+    db.session.add(add_book)
+    db.session.commit()
+
+
+    if not requested_book:
+        flash('You have not requested this book')
+        return redirect(url_for('librarian'))
+    
+    # Remove the association between the user and the book by deleting the book_request record
+
+    db.session.delete(requested_book)
+    db.session.commit()
+
+    flash('Book request approved successfully')
+    return redirect(url_for('librarian'))

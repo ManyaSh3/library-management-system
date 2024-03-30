@@ -1,0 +1,50 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+    <h1 class="display-1">Requested Books</h1>
+    <hr>
+
+    {% if requested_books %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Book Title</th>
+                    <th>Author</th>
+                    <th>Section</th>
+                    <th>Content</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in requested_books %}
+                    <tr>
+                        <td>{{ request.books.title }}</td>
+                        <td>{{ request.books.author }}</td>
+                        <td>{{ request.books.section.title }}</td>
+                        <td>{{ request.books.content }}</td>
+                        <td>
+                            <!-- Add your action buttons here -->
+                            <form action="{{ url_for('approve_request', book_id=request.books.id) }}" method="post">
+                                <button class="btn btn-success">
+                                    <i class="fas fa-check"></i>
+                                    Approve
+                                </button>
+                            </form>
+
+                            <form action="{{ url_for('cancel_request', book_id=request.books.id) }}" method="post">
+                                <button class="btn btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                    Cancel
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            <h2>No requested books</h2>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,6 +1,55 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-    this the content of index
+    {% include 'searchbar.html' with context %}
+    <hr>
+    <div class="d-grid gap-2">
+        <a href="{{ url_for('borrowed_books') }}" class="btn btn-primary" type="button">Your Books</a>
+        
+      </div>
+    <div class="sections-list">
+        {% for section in sections %}
+            <h2>{{ section.title }}</h2>
+            <div class="books">
+                {% for book in section.books %}
+                    {% if book in books %}
+                        <div class="card" style="width: 18rem;">
+                            <img src="https://picsum.photos/200/200" class="card-img-top" alt="{{ book.name }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ book.name }}</h5>
+                                <p class="card-text">
+                                    <strong>Title:</strong> {{ book.title }}<br>
+                                    <strong>Description:</strong> {{ book.content }}<br>
+                                    <strong>Author:</strong> {{ book.author }}
+                                </p>
+                                <div class="quantity_input">
+                                    <form action="{{ url_for('request_book', book_id=book.id) }}" method="POST" class="form">
+                                        <input type="submit" value="Request Book" class="btn btn-success">
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}
 
+{% block style %}
+    <style>
+        .sections-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .books {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .card {
+            margin: 10px;
+        }
+    </style>
+{% endblock %}

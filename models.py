@@ -42,9 +42,18 @@ class book_issue(db.Model):
     user_id=db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     date_issued=db.Column(db.DateTime, nullable=False)
     date_return=db.Column(db.DateTime, nullable=False)
-    status=db.Column(db.Boolean,nullable=False, default=False)
+    status=db.Column(db.Boolean,nullable=False, default=True)
     books=db.relationship('Book',backref='book_issue',lazy=True)
     users=db.relationship('User',backref='book_issue',lazy=True)
+
+class book_request(db.Model):
+    id=db.Column(db.Integer, primary_key=True)
+    book_id=db.Column(db.Integer, db.ForeignKey('book.id'), nullable=False)
+    user_id=db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    date_requested=db.Column(db.DateTime, nullable=False)
+    status=db.Column(db.Boolean,nullable=False, default=True)
+    books=db.relationship('Book',backref='book_request',lazy=True)
+    users=db.relationship('User',backref='book_request',lazy=True)
 
 
 class book_return(db.Model):
@@ -56,14 +65,7 @@ class book_return(db.Model):
     usesr=db.relationship('User',backref='book_return',lazy=True)
 
 
-class book_request(db.Model):
-    id=db.Column(db.Integer, primary_key=True)
-    book_id=db.Column(db.Integer, db.ForeignKey('book.id'), nullable=False)
-    user_id=db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    date_requested=db.Column(db.DateTime, nullable=False)
-    status=db.Column(db.Boolean,nullable=False, default=False) #False=Pending, True=Approved or Rejected 
-    books=db.relationship('Book',backref='book_request',lazy=True)
-    users=db.relationship('User',backref='book_request',lazy=True)
+
 
 class book_rating(db.Model):
     id=db.Column(db.Integer, primary_key=True)

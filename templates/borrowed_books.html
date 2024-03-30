@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+    <h1 class="display-1">Your Books</h1>
+    <hr>
+
+    {% if borrowed_books|length > 0 %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Section</th>
+                    <th>Book Title</th>
+                    <th>Content</th>
+                    <th>Author</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in borrowed_books %}
+                    <tr>
+                        <td>{{ book.books.section.title }}</td>
+                        <td>{{ book.books.title }}</td>
+                        <td>{{ book.books.content }}</td>
+                        <td>{{ book.books.author }}</td>
+                        <td>
+                            <form action="{{ url_for('return_book', book_id=book.id) }}" method="post">
+                                <button class="btn btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                    Return
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            <h2>No borrowed books</h2>
+        </div>
+    {% endif %}
+{% endblock %}
