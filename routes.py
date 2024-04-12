@@ -1,9 +1,14 @@
-from flask import render_template,request,redirect,url_for,flash,session
+from flask import render_template,request,redirect,url_for,flash,session,render_template_string
 from app import app
 from models import db,User,Section,Book,book_issue,book_request,book_rating,book_feedback,transaction_history,book_return
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
+import plotly.graph_objs as go
+import numpy as np
+from plotly.offline import plot
+
+
 
 
 
@@ -481,3 +486,63 @@ def approve_request(book_id):
 
     flash('Book request approved successfully')
     return redirect(url_for('librarian'))
+
+
+
+# Import render_template_string
+from flask import render_template_string
+
+# Create a route for the dashboard page
+@app.route('/dashboard')
+@auth_required
+def dashboard():
+    # Retrieve section data from the Section table
+    sections = Section.query.all()
+    
+    # Extract section names and counts
+    section_names = [section.title for section in sections]
+    section_counts = [len(section.books) for section in sections]  # Assuming each section has a "books" attribute
+
+    # Create a Pie chart with custom dimensions
+    fig_pie = go.Figure(data=[go.Pie(labels=section_names, values=section_counts)])
+    fig_pie.update_layout(width=600, height=400)  # Set width and height as needed
+
+    # Create a Bar graph with custom dimensions
+    fig_bar = go.Figure(data=[go.Bar(x=section_names, y=section_counts)])
+    fig_bar.update_layout(width=600, height=400)  # Set width and height as needed
+
+
+    # Convert Plotly figures to HTML strings
+    plot_html_pie = fig_pie.to_html(full_html=False)
+    plot_html_bar = fig_bar.to_html(full_html=False)
+
+    # Render the template with plot HTML using render_template_string
+    return render_template_string('<h1>Dashboard</h1><div style="display: flex;"><div style="width: 50%;"><h2>Section Distribution</h2>{{ plot_html_pie|safe }}</div><div style="width: 50%;"><h2>Number of Books per Section</h2>{{ plot_html_bar|safe }}</div></div>', plot_html_pie=plot_html_pie, plot_html_bar=plot_html_bar)
+
+
+
+@app.route('/librarian/dashboard')
+def librarian_dashboard():
+    # Retrieve section data from the Section table
+    sections = Section.query.all()
+    
+    # Extract section names and counts
+    section_names = [section.title for section in sections]
+    section_counts = [len(section.books) for section in sections]  # Assuming each section has a "books" attribute
+
+    # Create a Pie chart with custom dimensions
+    fig_pie = go.Figure(data=[go.Pie(labels=section_names, values=section_counts)])
+    fig_pie.update_layout(width=600, height=400)  # Set width and height as needed
+
+    # Create a Bar graph with custom dimensions
+    fig_bar = go.Figure(data=[go.Bar(x=section_names, y=section_counts)])
+    fig_bar.update_layout(width=600, height=400)  # Set width and height as needed
+
+    # Convert Plotly figures to HTML strings
+    plot_html_pie = fig_pie.to_html(full_html=False)
+    plot_html_bar = fig_bar.to_html(full_html=False)
+
+    # Render the template with the plot HTML
+    return render_template('librarian_dashboard.html', 
+                           plot_html_pie=plot_html_pie, 
+                           plot_html_bar=plot_html_bar)

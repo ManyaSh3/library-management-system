@@ -1,0 +1,23 @@
+<!-- librarian_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librarian Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Librarian Dashboard</h1>
+    <div style="display: flex;">
+        <div style="width: 50%;">
+            <h2>Section Distribution</h2>
+            {{ plot_html_pie|safe }}
+        </div>
+        <div style="width: 50%;">
+            <h2>Issued Books per Section</h2>
+            {{ plot_html_bar|safe }}
+        </div>
+    </div>
+</body>
+</html>
