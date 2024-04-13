@@ -1,0 +1,19 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Dashboard
+{% endblock %}
+<hr>
+{% block content %}
+    <h1>Dashboard</h1>
+    <div style="display: flex;">
+        <div style="width: 60%;">
+            <h2>Section Distribution</h2>
+            {{ plot_html_donut|safe }}
+        </div>
+        <div style="width: 60%;">
+            <h2>Number of Books per Section</h2>
+            {{ plot_html_bar|safe }}
+        </div>
+    </div>
+{% endblock %}
+

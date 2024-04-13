@@ -1,12 +1,13 @@
 from flask import render_template,request,redirect,url_for,flash,session,render_template_string
 from app import app
-from models import db,User,Section,Book,book_issue,book_request,book_rating,book_feedback,transaction_history,book_return
+from flask import send_from_directory
+from models import db,User,Section,Book,book_issue,book_request,remaining_issue_days,book_rating,book_feedback,transaction_history,book_return
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
 import plotly.graph_objs as go
-import numpy as np
 from plotly.offline import plot
+from collections import defaultdict
 
 
 
@@ -33,6 +34,9 @@ def login_post():
         flash('Incorrect password')
         return redirect(url_for('login'))
     session['userid'] = user.id
+
+    update_remaining_days(user.id)
+
     return redirect(url_for('index'))
 
 @app.route('/register')
@@ -340,6 +344,7 @@ def index():
     if user.is_librarian:
         return redirect(url_for('librarian'))
     
+    
     sections = Section.query.all()
     books = Book.query.all()
 
@@ -357,43 +362,89 @@ def index():
     return render_template('index.html', user=user, sections=sections, books=books, cname=cname, pname=pname , all_sections=all_sections)
 
 
-# @app.route('/borrow_book/<int:book_id>', methods=['GET','POST'])
-# @auth_required
-# def borrow_book(book_id):
-#     book = Book.query.get(book_id)
-#     if not book:
-#         flash('Book not found')
-#         return redirect(url_for('index'))
-    
-#     # Check if the book is already borrowed
-#     borrowed_book = book_issue.query.filter_by(book_id=book_id, user_id=session.get('userid')).first()
-#     if borrowed_book:
-#         flash('You have already borrowed this book')
-#         return redirect(url_for('index'))
-#     issued_books_count = book_issue.query.filter_by(user_id=session.get('userid'), status=True).count()
 
-#     if issued_books_count >= 5:
-#         flash('You have already issued 5 books. Return some before issuing more.')
-#         return redirect(url_for('index'))
-#     # Issue the book
-#     new_borrowed_book = book_issue(book_id=book_id, user_id=session.get('userid'), date_issued=datetime.now(), date_return=datetime.now())
-#     db.session.add(new_borrowed_book)
-#     db.session.commit()
-#     flash('Book borrowed successfully')
-#     return redirect(url_for('index'))
 
+
+@app.route('/remaining_days/<int:user_id>', methods=['POST'])
+@auth_required
+def update_remaining_days(user_id):
+    import datetime
+
+    # Get current date
+    current_date = datetime.datetime(2024, 4, 16)  # Assuming the current date is 1st September 2021
+
+    # Find all books issued to the specified user
+    borrowed_books = book_issue.query.filter_by(user_id=user_id, status=True).all()
+    to_check_days = remaining_issue_days.query.filter_by(user_id=user_id).all()
+
+    # Create a dictionary to store the last update date for each remaining_days_entry
+    last_update_dates = defaultdict(lambda: None)
+
+    if borrowed_books and to_check_days:
+        for borrowed_book in borrowed_books:
+            # Find the corresponding remaining_issue_days for the current borrowed_book
+            remaining_days_entry = next((rd for rd in to_check_days if rd.book_id == borrowed_book.book_id), None)
+
+            if remaining_days_entry:
+                # Calculate the difference in days between current date and remaining_days
+                borrowed_date = borrowed_book.date_issued
+                borrowed_duration = remaining_days_entry.remaining_days
+                elapsed_time = (current_date - borrowed_date ).days  + 1
+                days_difference = borrowed_duration - elapsed_time
+
+                if days_difference < 0:
+                    borrowed_book.status = False
+                    db.session.commit()
+
+                # Check if the update has already been done for the current day
+                last_update_date = last_update_dates[remaining_days_entry.id]
+                if last_update_date != current_date.date():
+                    # Update remaining days in the remaining_issue_days table
+                    remaining_days_entry.remaining_days = days_difference
+                    db.session.commit()
+
+                    # Update the last update date in the dictionary
+                    last_update_dates[remaining_days_entry.id] = current_date.date()
+            else:
+                # Handle the case when the entry doesn't exist
+                print(f"Warning: No remaining days entry found for book_id {borrowed_book.book_id} and user_id {user_id}.")
+    else:
+        return "No borrowed books or remaining days found for this user."
+
+@app.route('/check_overdue_books')
+@librarian_required  # Assuming this decorator is used for librarian authentication
+def check_overdue_books():
+    # Logic to retrieve overdue books
+    overdue_books = book_issue.query.filter(book_issue.status == False).all()
+    book_ids = [book.book_id for book in overdue_books]
+    books = Book.query.filter(Book.id.in_(book_ids)).all()
+
+    return render_template('expired_books.html', expired_books=overdue_books, books=books)
+
+@app.route('/revoke_book/<int:book_id>', methods=['POST'])
+@librarian_required  # Assuming this decorator is used for librarian authentication
+def revoke_book(book_id):
+    book = book_issue.query.get_or_404(book_id)
+    db.session.delete(book)
+    db.session.commit()
+    remaining_days_entry = remaining_issue_days.query.filter_by(book_id=book_id).first()
+    if remaining_days_entry:
+        db.session.delete(remaining_days_entry)
+        db.session.commit()
+    flash('The book has been revoked successfully.', 'success')
+    return redirect(url_for('check_overdue_books'))   # Redirect back to the expired books page
 
 @app.route('/return_book/<int:book_id>', methods=['POST'])
 @auth_required  
 def return_book(book_id):
     book = Book.query.get(book_id)
-
+    print(book_id)
     if not book:
         flash('Book not found')
         return redirect(url_for('index'))
 
     # Check if the book is borrowed by the current user
-    borrowed_book = book_issue.query.filter_by(id=book_id, user_id=session.get('userid')).first()
+    borrowed_book = book_issue.query.filter_by(book_id=book_id, user_id=session.get('userid')).first()
 
     if not borrowed_book:
         flash('You have not borrowed this book')
@@ -402,6 +453,12 @@ def return_book(book_id):
     # Remove the association between the user and the book by deleting the book_issue record
     db.session.delete(borrowed_book)
     db.session.commit()
+
+    # Delete the corresponding entry in remaining_issue_days
+    remaining_days_entry = remaining_issue_days.query.filter_by(book_id=book_id, user_id=session.get('userid')).first()
+    if remaining_days_entry:
+        db.session.delete(remaining_days_entry)
+        db.session.commit()
 
     flash('Book returned successfully')
     return redirect(url_for('index'))
@@ -413,7 +470,17 @@ def return_book(book_id):
 def borrowed_books():
     user_id = session.get('userid')    
     borrowed_books = book_issue.query.filter_by(user_id=user_id, status=True).all()
-    return render_template('borrowed_books.html', borrowed_books=borrowed_books)
+    overdue_books = book_issue.query.filter_by(user_id=user_id, status= False).all()
+    remaining_days_dict = {}  # Dictionary to store remaining days for each book
+
+    # Fetch remaining days for each book
+    for book in borrowed_books:
+        remaining_days_obj = remaining_issue_days.query.filter_by(book_id=book.book_id, user_id=user_id).first()
+        if remaining_days_obj:
+            remaining_days_dict[book.book_id] = remaining_days_obj.remaining_days
+
+    return render_template('borrowed_books.html', borrowed_books=borrowed_books, overdue_books=overdue_books,remaining_days_dict=remaining_days_dict)
+
 
 @app.route('/request_book/<int:book_id>', methods=['POST'])
 @auth_required
@@ -423,14 +490,43 @@ def request_book(book_id):
         flash('Book not found')
         return redirect(url_for('index'))
     
+    # Check if the book is already borrowed
+    borrowed_book = book_issue.query.filter_by(book_id=book_id, user_id=session.get('userid')).first()
+    if borrowed_book:
+        flash('You have already borrowed this book')
+        return redirect(url_for('index'))
+
+    # Check the number of issued books
+    issued_books_count = book_issue.query.filter_by(user_id=session.get('userid'), status=True).count()
+    if issued_books_count >= 5:
+        flash('You have already issued 5 books. Return some before issuing more.')
+        return redirect(url_for('index'))
+
+    # Get the number of days from the form submission
+    days = int(request.form['days'])
+    
     # Request the book
     new_borrowed_book = book_request(book_id=book_id, user_id=session.get('userid'), date_requested=datetime.now(), status=True)
     db.session.add(new_borrowed_book)
+    
+    # Update the remaining_issue_days table
+    remaining_issue_days_entry = remaining_issue_days.query.filter_by(book_id=book_id, user_id=session.get('userid')).first() 
+
+    if not remaining_issue_days_entry:
+        remaining_issue_days_entry = remaining_issue_days(
+            user_id=session.get('userid'),
+            book_id=book_id,
+            remaining_days=days
+        )
+    else:
+        remaining_issue_days_entry.remaining_days = days
+
+    db.session.add(remaining_issue_days_entry)
     db.session.commit()
+
+    
     flash('Book requested successfully')
-
     return redirect(url_for('index'))
-
 @app.route('/requested_books')
 @librarian_required
 def requested_books():
@@ -459,7 +555,6 @@ def cancel_request(book_id):
     flash('Book request cancelled successfully')
     return redirect(url_for('librarian'))
 
-
 @app.route('/approve_request/<int:book_id>', methods=['POST'])
 @librarian_required
 def approve_request(book_id):
@@ -468,57 +563,82 @@ def approve_request(book_id):
         flash('Book not found')
         return redirect(url_for('librarian'))
     
-    # Check if the book is requested by the current user
     requested_book = book_request.query.filter_by(book_id=book_id).first()
-    add_book=book_issue(book_id=book_id, user_id=requested_book.user_id, date_issued=datetime.now(), date_return=datetime.now(),status=True)
-    db.session.add(add_book)
-    db.session.commit()
-
-
     if not requested_book:
         flash('You have not requested this book')
         return redirect(url_for('librarian'))
     
-    # Remove the association between the user and the book by deleting the book_request record
+    issued_books_count = 0  # Initialize issued_books_count with a default value
 
+    issued_books_count = book_issue.query.filter(
+        book_issue.user_id == requested_book.user_id,
+        book_issue.status == True  # Assuming True indicates the book is issued
+    ).count()
+
+    if issued_books_count >= 5:
+        flash('User has already issued 5 books. Cannot issue more.')
+        return redirect(url_for('librarian'))
+
+    add_book = book_issue(book_id=book_id, user_id=requested_book.user_id, date_issued=datetime.now(), date_return=datetime.now(), status=True)
+    db.session.add(add_book)
+    db.session.commit()
+    
+    # Remove the association between the user and the book by deleting the book_request record
     db.session.delete(requested_book)
     db.session.commit()
 
     flash('Book request approved successfully')
-    return redirect(url_for('librarian'))
+    return redirect(url_for('requested_books'))
 
 
 
-# Import render_template_string
-from flask import render_template_string
 
-# Create a route for the dashboard page
+
 @app.route('/dashboard')
 @auth_required
 def dashboard():
-    # Retrieve section data from the Section table
-    sections = Section.query.all()
-    
-    # Extract section names and counts
-    section_names = [section.title for section in sections]
-    section_counts = [len(section.books) for section in sections]  # Assuming each section has a "books" attribute
+    # Retrieve borrowed books data from the book_issue table for the current user
+    user_id = session.get('userid')
 
-    # Create a Pie chart with custom dimensions
-    fig_pie = go.Figure(data=[go.Pie(labels=section_names, values=section_counts)])
-    fig_pie.update_layout(width=600, height=400)  # Set width and height as needed
+    # Filter borrowed books by user_id and status
+    borrowed_books = book_issue.query.filter_by(user_id=user_id, status=True).all()
 
-    # Create a Bar graph with custom dimensions
-    fig_bar = go.Figure(data=[go.Bar(x=section_names, y=section_counts)])
+    # Extract section names and counts from borrowed books
+    section_counts = {}
+    for borrowed_book in borrowed_books:
+        section_title = borrowed_book.books.section.title
+        section_counts[section_title] = section_counts.get(section_title, 0) + 1
+
+    section_names = list(section_counts.keys())
+    section_book_counts = list(section_counts.values())
+
+    # Create a Donut chart for section distribution of borrowed books
+    fig_donut = go.Figure(data=[go.Pie(labels=section_names, values=section_book_counts, hole=.3)])
+    fig_donut.update_layout(width=600, height=400)  # Set width and height as needed
+
+    # Get all sections
+    all_sections = Section.query.all()
+    all_section_names = [section.title for section in all_sections]
+
+    # Initialize counts for all sections to 0
+    section_book_counts = [0] * len(all_sections)
+
+    # Update counts for sections where the user has borrowed books
+    for borrowed_book in borrowed_books:
+        section_title = borrowed_book.books.section.title
+        section_index = all_section_names.index(section_title)
+        section_book_counts[section_index] += 1
+
+    # Create a Bar graph for books distribution per section
+    fig_bar = go.Figure(data=[go.Bar(x=all_section_names, y=section_book_counts)])
     fig_bar.update_layout(width=600, height=400)  # Set width and height as needed
 
-
     # Convert Plotly figures to HTML strings
-    plot_html_pie = fig_pie.to_html(full_html=False)
+    plot_html_donut = fig_donut.to_html(full_html=False)
     plot_html_bar = fig_bar.to_html(full_html=False)
 
     # Render the template with plot HTML using render_template_string
-    return render_template_string('<h1>Dashboard</h1><div style="display: flex;"><div style="width: 50%;"><h2>Section Distribution</h2>{{ plot_html_pie|safe }}</div><div style="width: 50%;"><h2>Number of Books per Section</h2>{{ plot_html_bar|safe }}</div></div>', plot_html_pie=plot_html_pie, plot_html_bar=plot_html_bar)
-
+    return render_template('dashboard.html' ,plot_html_donut=plot_html_donut, plot_html_bar=plot_html_bar)
 
 
 @app.route('/librarian/dashboard')
@@ -530,19 +650,148 @@ def librarian_dashboard():
     section_names = [section.title for section in sections]
     section_counts = [len(section.books) for section in sections]  # Assuming each section has a "books" attribute
 
-    # Create a Pie chart with custom dimensions
-    fig_pie = go.Figure(data=[go.Pie(labels=section_names, values=section_counts)])
-    fig_pie.update_layout(width=600, height=400)  # Set width and height as needed
+    # Create a Donut chart with custom dimensions for section distribution
+    fig_donut = go.Figure(data=[go.Pie(labels=section_names, values=section_counts, hole=.3)])
+    fig_donut.update_layout(width=600, height=400, title='Section Distribution')
 
-    # Create a Bar graph with custom dimensions
-    fig_bar = go.Figure(data=[go.Bar(x=section_names, y=section_counts)])
-    fig_bar.update_layout(width=600, height=400)  # Set width and height as needed
+    # Create a bar graph for number of books issued per section
+    books_issued_per_section = [Book.query.filter_by(section_id=section.id).join(book_issue).filter_by(status=True).count() for section in sections]
+    fig_bar = go.Figure([go.Bar(x=section_names, y=books_issued_per_section)])
+    fig_bar.update_layout(title='Number of Books Issued per Section')
 
     # Convert Plotly figures to HTML strings
-    plot_html_pie = fig_pie.to_html(full_html=False)
+    plot_html_donut = fig_donut.to_html(full_html=False)
     plot_html_bar = fig_bar.to_html(full_html=False)
 
     # Render the template with the plot HTML
     return render_template('librarian_dashboard.html', 
-                           plot_html_pie=plot_html_pie, 
+                           plot_html_donut=plot_html_donut, 
                            plot_html_bar=plot_html_bar)
+
+#routes for rating and feedback
+@app.route('/rate_book/<int:book_id>', methods=['POST'])
+@auth_required
+def submit_rating(book_id):
+    rating = request.form.get('rating')
+    if not rating:
+        flash('Please provide a rating')
+        return redirect(url_for('rate_book', book_id=book_id))
+
+    # Check if the user has already rated the book
+    rated_book = book_rating.query.filter_by(book_id=book_id, user_id=session.get('userid')).first()
+    if rated_book:
+        flash('You have already rated this book')
+        return redirect(url_for('borrowed_books'))
+
+    # Add the rating to the database
+    new_rating = book_rating(book_id=book_id, user_id=session.get('userid'), rating=rating)
+    db.session.add(new_rating)
+    db.session.commit()
+
+    flash('Rating submitted successfully')
+    return redirect(url_for('borrowed_books'))
+
+@app.route('/rate_book/<int:book_id>' , methods=['GET' , 'POST'])
+@auth_required
+def rate_book(book_id):
+    book = Book.query.get(book_id)
+    if not book:
+        flash('Book not found')
+        return redirect(url_for('index'))
+
+    # Check if the user has already rated the book
+    rated_book = book_rating.query.filter_by(book_id=book_id, user_id=session.get('userid')).first()
+    if rated_book:
+        flash('You have already rated this book')
+        return redirect(url_for('borrowed_books'))
+
+    return render_template('rate_book.html', book=book)
+
+
+@app.route('/feedback_book/<int:book_id>', methods=['POST'])
+@auth_required
+def submit_feedback(book_id):
+    feedback = request.form.get('feedback')
+    if not feedback:
+        flash('Please provide feedback')
+        return redirect(url_for('feedback_book', book_id=book_id))
+
+    # Check if the user has already provided feedback for the book
+    feedback_given = book_feedback.query.filter_by(book_id=book_id, user_id=session.get('userid')).first()
+    if feedback_given:
+        flash('You have already provided feedback for this book')
+        return redirect(url_for('borrowed_books'))
+
+    # Add the feedback to the database
+    new_feedback = book_feedback(book_id=book_id, user_id=session.get('userid'), feedback=feedback)
+    db.session.add(new_feedback)
+    db.session.commit()
+
+    flash('Feedback submitted successfully')
+    return redirect(url_for('borrowed_books'))
+
+@app.route('/feedback_book/<int:book_id>', methods=['GET'])
+@auth_required
+def feedback_book(book_id):
+    book = Book.query.get(book_id)
+    if not book:
+        flash('Book not found')
+        return redirect(url_for('index'))
+    
+    # Check if the user has already provided feedback for the book
+    feedback_given = book_feedback.query.filter_by(book_id=book_id, user_id=session.get('userid')).first()
+    if feedback_given:
+        flash('You have already provided feedback for this book')
+        return redirect(url_for('borrowed_books'))
+    
+    return render_template('feedback_book.html', book=book)
+ 
+@app.route('/pdf_view/<int:book_id>')
+def pdf_view(book_id):
+    # Assuming the PDF file is named "Naruto v01.pdf" and is located in the static folder
+    pdf_filename = 'Naruto v01.pdf'
+    # Send the PDF file to the client
+    return send_from_directory(app.static_folder, pdf_filename)
+
+
+@app.route('/book_ratings_feedback')
+def book_ratings_feedback():
+    # Fetch book ratings and feedbacks from the database
+    book_ratings = book_rating.query.all()
+    book_feedbacks = book_feedback.query.all()
+    return render_template('book_ratings_feedback.html', 
+                           book_ratings=book_ratings, 
+                           book_feedbacks=book_feedbacks)
+
+@app.context_processor
+def utility_processor():
+    def get_book_title(book_id):
+        book = Book.query.get(book_id)
+        if book:
+            return book.title
+        else:
+            return "Unknown"
+    return dict(get_book_title=get_book_title)
+
+
+@app.route('/library_status')
+def library_status():
+    # Fetch borrowed books and overdue books from the database
+    borrowed_books = book_issue.query.filter_by(status=True).all()
+    overdue_books = book_issue.query.filter_by(status= False).all()
+    remaining_days=remaining_issue_days.query.all()
+
+    return render_template('library_status.html', 
+                           borrowed_books=borrowed_books, 
+                           overdue_books=overdue_books,remaining_days=remaining_days)
+
+@app.route('/revoke_access/<int:book_id>', methods=['POST'])
+@librarian_required  # Assuming this decorator is used for librarian authentication
+def revoke_access(book_id):
+    book = book_issue.query.get_or_404(book_id)
+    db.session.delete(book)
+    remaining_days_entry = remaining_issue_days.query.filter_by(id=book_id).first()
+    db.session.delete(remaining_days_entry)
+    db.session.commit()
+    flash('The book has been revoked successfully.', 'success')
+    return redirect(url_for('library_status'))   # Redirect back to the expired books page

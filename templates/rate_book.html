@@ -1,0 +1,19 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Rate Book!
+{% endblock %}
+
+{% block content %}
+    <h1 class="display-1">Rate Book!</h1>
+    <hr>
+    <form method="post">
+        <div class="form-group">
+            <label for="rating">Rating</label>
+            <input type="number" class="form-control" id="rating" name="rating" min="1" max="5" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    
+{% endblock %}
+

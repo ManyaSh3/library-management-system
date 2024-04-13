@@ -65,6 +65,14 @@ class book_return(db.Model):
     usesr=db.relationship('User',backref='book_return',lazy=True)
 
 
+class remaining_issue_days(db.Model):
+    id=db.Column(db.Integer, primary_key=True)
+    book_id=db.Column(db.Integer, db.ForeignKey('book.id'), nullable=False)
+    user_id=db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    remaining_days=db.Column(db.Integer, nullable=False)
+    books=db.relationship('Book',backref='remaining_days',lazy=True)
+    users=db.relationship('User',backref='remaining_days',lazy=True)
+
 
 
 class book_rating(db.Model):

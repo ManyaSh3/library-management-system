@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Feedback Book
+{% endblock %}
+
+{% block content %}
+    <h1 class="display-1">Feedback Book</h1>
+    <hr>
+    <form method="post">
+        <div class="form-group">
+            <label for="feedback">feedback</label>
+            <textarea class="form-control" id="feedback" name="feedback" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+{% endblock %}

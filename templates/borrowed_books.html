@@ -1,8 +1,19 @@
 {% extends 'layout.html' %}
+{% block title %}
+    My Books
+{% endblock %}
+
+{% block style %}
+    <style>
+        .btn-group .btn {
+            margin-right: 5px; /* Adjust the margin as needed */
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
 
-    <h1 class="display-1">Your Books</h1>
+    <h1 class="display-1">My Books</h1>
     <hr>
 
     {% if borrowed_books|length > 0 %}
@@ -13,6 +24,7 @@
                     <th>Book Title</th>
                     <th>Content</th>
                     <th>Author</th>
+                    <th>Remaining Days</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -23,13 +35,33 @@
                         <td>{{ book.books.title }}</td>
                         <td>{{ book.books.content }}</td>
                         <td>{{ book.books.author }}</td>
+                        <td>{{ remaining_days_dict.get(book.book_id, 'N/A') }}</td>
                         <td>
-                            <form action="{{ url_for('return_book', book_id=book.id) }}" method="post">
-                                <button class="btn btn-danger">
-                                    <i class="fas fa-trash"></i>
-                                    Return
-                                </button>
-                            </form>
+                            <div class="btn-group" role="group">
+                                <form action="{{ url_for('return_book', book_id=book.books.id) }}" method="post">
+                                    <button class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                        Return
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('rate_book', book_id=book.id) }}">
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                        Rate Book!
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('pdf_view', book_id=book.id) }}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-book-open"></i>
+                                    Read
+                                </a>
+                                
+                                <form action="{{ url_for('feedback_book', book_id=book.id) }}">
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                        Feedback!
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 {% endfor %}
@@ -38,6 +70,36 @@
     {% else %}
         <div class="alert alert-info">
             <h2>No borrowed books</h2>
+        </div>
+    {% endif %}
+    <h1>Overdue Books</h1>
+    <hr>
+    {% if overdue_books|length > 0 %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Section</th>
+                    <th>Book Title</th>
+                    <th>Content</th>
+                    <th>Author</th>
+                    <th>Issue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in overdue_books %}
+                    <tr>
+                        <td>{{ book.books.section.title }}</td>
+                        <td>{{ book.books.title }}</td>
+                        <td>{{ book.books.content }}</td>
+                        <td>{{ book.books.author }}</td>
+                        <td><strong style="color: red;">Overdue!!</strong></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            <h2>No overdue books</h2>
         </div>
     {% endif %}
 {% endblock %}

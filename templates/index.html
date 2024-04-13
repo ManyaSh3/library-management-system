@@ -4,9 +4,8 @@
     {% include 'searchbar.html' with context %}
     <hr>
     <div class="d-grid gap-2">
-        <a href="{{ url_for('borrowed_books') }}" class="btn btn-primary" type="button">Your Books</a>
-        
-      </div>
+        <a href="{{ url_for('borrowed_books') }}" class="btn btn-primary" type="button">My Books</a>
+    </div>
     <hr>
     <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Dashboard</a>
     <div class="sections-list">
@@ -25,7 +24,11 @@
                                     <strong>Author:</strong> {{ book.author }}
                                 </p>
                                 <div class="quantity_input">
-                                    <form action="{{ url_for('request_book', book_id=book.id) }}" method="POST" class="form">
+                                    <form action="{{ url_for('request_book', book_id=book.id, days=7) }}" method="POST" class="form">
+                                        <div class="mb-3">
+                                            <label for="days" class="form-label">Number of Days:</label>
+                                            <input type="number" class="form-control" id="days" name="days" min="1" max="7" required>
+                                        </div>
                                         <input type="submit" value="Request Book" class="btn btn-success">
                                     </form>
                                 </div>

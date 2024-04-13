@@ -1,0 +1,97 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Library Status
+{% endblock %}
+
+{% block style %}
+    <style>
+        .btn-group .btn {
+            margin-right: 5px; /* Adjust the margin as needed */
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1 class="display-1">Library Status</h1>
+    <hr>
+
+    <h2>Borrowed Books</h2>
+    {% if borrowed_books|length > 0 %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Borrowed by</th>
+                    <th>Section</th>
+                    <th>Book Title</th>
+                    <th>Content</th>
+                    <th>Author</th>
+                    <th>Remaining Days</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in borrowed_books %}
+                    <tr>
+                        <td>{{ book.user_id }}</td>
+                        <td>{{ book.books.section.title }}</td>
+                        <td>{{ book.books.title }}</td>
+                        <td>{{ book.books.content }}</td>
+                        <td>{{ book.books.author }}</td>
+                        <td>
+                            {% for days in remaining_days %}
+                                {% if days.book_id == book.books.id %}
+                                    {{ days.remaining_days }}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <form action="{{ url_for('revoke_access', book_id=book.id) }}" method="post">
+                                    <button class="btn btn-danger btn-sm">
+                                        <i class="fas fa-times"></i>
+                                        Revoke Access
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            <h2>No borrowed books</h2>
+        </div>
+    {% endif %}
+<!-- 
+    <h2>Overdue Books</h2>
+    {% if overdue_books|length > 0 %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Section</th>
+                    <th>Book Title</th>
+                    <th>Content</th>
+                    <th>Author</th>
+                    <th>Issue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in overdue_books %}
+                    <tr>
+                        <td>{{ book.books.section.title }}</td>
+                        <td>{{ book.books.title }}</td>
+                        <td>{{ book.books.content }}</td>
+                        <td>{{ book.books.author }}</td>
+                        <td><strong style="color: red;">Overdue!!</strong></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            <h2>No overdue books</h2>
+        </div>
+    {% endif %} -->
+{% endblock %}

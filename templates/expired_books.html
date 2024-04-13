@@ -1,0 +1,42 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Overdue Books
+{% endblock %}
+{% block content %}
+    <h1 class="display-1">Overdue Books</h1>
+    <hr>
+
+    {% if expired_books %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Book ID</th>
+                    <th>Title</th>
+                    <th>User ID</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in expired_books %}
+                    <tr>
+                        <td>{{ book.id }}</td>
+                        <td>{{ book.books.title }}</td>
+                        <td>{{ book.user_id }}</td>
+                        <td>
+                            <form action="{{ url_for('revoke_book', book_id=book.id) }}" method="post">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Revoke
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            <h2>No overdue books</h2>
+        </div>
+    {% endif %}
+{% endblock %}

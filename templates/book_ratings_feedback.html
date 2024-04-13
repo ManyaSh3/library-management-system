@@ -1,0 +1,53 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Book Ratings and Feedback
+{% endblock %}
+
+{% block content %}
+    <h1 class="display-1">Book Ratings and Feedback</h1>
+    <hr>
+
+    <h2>Book Ratings</h2>
+    {% if book_ratings %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Book Title</th>
+                    <th>Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rating in book_ratings %}
+                    <tr>
+                        <td>{{ get_book_title(rating.book_id) }}</td>
+                        <td>{{ rating.rating }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No ratings available.</p>
+    {% endif %}
+
+    <h2>Feedbacks</h2>
+    {% if book_feedbacks %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Book Title</th>
+                    <th>Feedback</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feedback in book_feedbacks %}
+                    <tr>
+                        <td>{{ get_book_title(feedback.book_id) }}</td>
+                        <td>{{ feedback.feedback }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No feedback available.</p>
+    {% endif %}
+{% endblock %}
