@@ -1,13 +1,25 @@
 {% extends 'layout.html' %}
 
+{% block title %}
+    Library Management System
+{% endblock %}
+
 {% block content %}
-    {% include 'searchbar.html' with context %}
-    <hr>
-    <div class="d-grid gap-2">
-        <a href="{{ url_for('borrowed_books') }}" class="btn btn-primary" type="button">My Books</a>
+<div class="container">
+
+    <h1><img src="/static/books.jpg" alt="Library" style="width:180px; height: 110px;"></h1>
+    
+{% include 'searchbar.html' with context %}
+<hr>
+
+</div>
+    <div class="buttons-container">
+        <a href="{{ url_for('faq') }}" class="btn btn-dark" style= "margin-right:5px" type="button">FAQ</a>
+        <a href="{{ url_for('borrowed_books') }}" class="btn btn-dark" style= "margin-right:5px" type="button">My Books</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-dark" type="button">Stats</a>
     </div>
-    <hr>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Dashboard</a>
+    
+    
     <div class="sections-list">
         {% for section in sections %}
             <h2>{{ section.title }}</h2>
@@ -15,7 +27,7 @@
                 {% for book in section.books %}
                     {% if book in books %}
                         <div class="card" style="width: 18rem;">
-                            <img src="https://picsum.photos/200/200" class="card-img-top" alt="{{ book.name }}">
+                            <img src="https://picsum.photos/200/200?seed={{ book.id }}" class="card-img-top" alt="{{ book.name }}">
                             <div class="card-body">
                                 <h5 class="card-title">{{ book.name }}</h5>
                                 <p class="card-text">
@@ -56,5 +68,22 @@
         .card {
             margin: 10px;
         }
+        h1{
+            text-align: center;
+        }
+        
+        body {
+            background-image: url("/static/bg.avif");
+            height: 100%;
+            background-attachment: relative;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .buttons-container {
+            display: flex;
+            justify-content:flex-end; /* Adjust as needed */
+            margin-bottom: 10px; /* Optional: Add some space between the buttons and other content */
+        }
+        
     </style>
 {% endblock %}

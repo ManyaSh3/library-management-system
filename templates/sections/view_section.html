@@ -12,17 +12,32 @@
             text-align: center;
         }
         
+        body {
+            background-image: url("/static/bg.avif");
+            height: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .buttons-container {
+            margin: 10px;
+            display: flex;
+            justify-content: space-between; /* Adjust as needed */
+            margin-bottom: 10px; /* Optional: Add some space between the buttons and other content */
+        }
+
+        .buttons {
+            margin-right: 20px;
+        }
+    
+        
     </style>
 {% endblock %}
 {% block content %}
     <div class="centered">
         <h1>Books of Section {{ section.title }}</h1>
     </div>
-    <a href="{{ url_for('add_section') }}">
-        <button type="button" id="add-btn" class="btn btn-info">
-            <i class="fas fa-plus"></i> Add Section!
-        </button>
-    </a>
     <br><br>
 
     <h3>Books</h3>
@@ -46,16 +61,21 @@
                 <td>{{ book.date_created }}</td>
                 <td>{{ book.content }}</td>
                 <td>
+                    <div class="buttons-container">
+                        <div class="buttons">
                     <a href="{{ url_for('edit_book', book_id=book.id) }}">
                         <button type="button" class="btn btn-warning">
                             <i class="fas fa-edit"></i> Edit
                         </button>
                     </a>
+                    </div>
+                    
                     <a href="{{ url_for('delete_book', book_id=book.id) }}">
                         <button type="button" class="btn btn-danger">
                             <i class="fas fa-trash"></i> Delete
                         </button>
                     </a>
+                    </div>
                 </td>
             </tr>
             {% endfor %}

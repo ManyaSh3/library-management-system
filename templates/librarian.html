@@ -7,55 +7,63 @@
         .centered {
             text-align: center;
         }
-        
+        body {
+            background-image: url("/static/bg.avif");
+            height: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+              
     </style>
 {% endblock %}
 {% block content %}
     <div class="centered">
-        <h1>Librarian</h1>
-        <p>Welcome to the librarian area</p>
+        <h1 style="color:brown">Welcome, Librarian</h1>
+        <h5 style="color:rgb(93, 12, 12)">Your Command Center for Knowledge and Order</h5>
+        <hr><br>
     </div>
 
     <div class="row mb-3">
         <div class="col-md">
             <a href="{{ url_for('add_section') }}">
-                <button type="button" class="btn btn-info btn-block">
-                    <i class="fas fa-plus"></i> Add Section
+                <button type="button" class="btn btn-info">
+                    <i class="fas fa-plus"></i> Add Section to library
                 </button>
             </a>
         </div>
         <div class="col-md">
             <a href="{{ url_for('requested_books') }}">
-                <button type="button" class="btn btn-info btn-block">
-                    <i class="fas fa-plus"></i> Review Requested Books
+                <button type="button" class="btn btn-info">
+                    Review Requested Books
                 </button>
             </a>
         </div>
         <div class="col-md">
             <a href="{{ url_for('librarian_dashboard') }}">
-                <button type="button" class="btn btn-info btn-block">
-                    <i class="fas fa-plus"></i> Dashboard
+                <button type="button" class="btn btn-info">
+                    Your Library Books Stats
                 </button>
             </a>
         </div>
         <div class="col-md">
             <a href="{{ url_for('check_overdue_books') }}">
-                <button type="button" class="btn btn-info btn-block">
-                    <i class="fas fa-plus"></i> Check Overdue Books
+                <button type="button" class="btn btn-info">
+                    View Overdue Books
                 </button>
             </a>
         </div>
         <div class="col-md">
             <a href="{{ url_for('book_ratings_feedback') }}">
-                <button type="button" class="btn btn-info btn-block">
+                <button type="button" class="btn btn-info">
                     <i class="fas fa-list"></i> View Ratings & Feedback
                 </button>
             </a>
         </div>
         <div class="col-md">
             <a href="{{ url_for('library_status') }}">
-                <button type="button" class="btn btn-info btn-block">
-                    <i class="fas fa-list"></i> Library Status
+                <button type="button" class="btn btn-info">
+                    <i class="fas fa-list"></i> View Library Status
                 </button>
             </a>
         </div>

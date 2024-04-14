@@ -6,14 +6,17 @@
 {% block content %}
     <h1>Dashboard</h1>
     <div style="display: flex;">
-        <div style="width: 60%;">
+        <div style="width: 50%; padding: 20px;">
             <h2>Section Distribution</h2>
-            {{ plot_html_donut|safe }}
+            <div style="padding: 20px;">
+                {{ plot_html_donut|safe }}
+            </div>
         </div>
-        <div style="width: 60%;">
+        <div style="width: 500px; margin-left:0px">
             <h2>Number of Books per Section</h2>
-            {{ plot_html_bar|safe }}
+            <div style="padding: 20px;">
+                {{ plot_html_bar|safe }}
+            </div>
         </div>
     </div>
 {% endblock %}
-

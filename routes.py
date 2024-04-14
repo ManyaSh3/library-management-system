@@ -364,26 +364,24 @@ def index():
 
 
 
-
 @app.route('/remaining_days/<int:user_id>', methods=['POST'])
 @auth_required
 def update_remaining_days(user_id):
     import datetime
 
     # Get current date
-    current_date = datetime.datetime(2024, 4, 16)  # Assuming the current date is 1st September 2021
+    current_date = datetime.datetime.now()  
 
     # Find all books issued to the specified user
     borrowed_books = book_issue.query.filter_by(user_id=user_id, status=True).all()
-    to_check_days = remaining_issue_days.query.filter_by(user_id=user_id).all()
 
     # Create a dictionary to store the last update date for each remaining_days_entry
     last_update_dates = defaultdict(lambda: None)
 
-    if borrowed_books and to_check_days:
+    if borrowed_books:
         for borrowed_book in borrowed_books:
             # Find the corresponding remaining_issue_days for the current borrowed_book
-            remaining_days_entry = next((rd for rd in to_check_days if rd.book_id == borrowed_book.book_id), None)
+            remaining_days_entry = remaining_issue_days.query.filter_by(user_id=user_id, book_id=borrowed_book.book_id).first()
 
             if remaining_days_entry:
                 # Calculate the difference in days between current date and remaining_days
@@ -409,7 +407,7 @@ def update_remaining_days(user_id):
                 # Handle the case when the entry doesn't exist
                 print(f"Warning: No remaining days entry found for book_id {borrowed_book.book_id} and user_id {user_id}.")
     else:
-        return "No borrowed books or remaining days found for this user."
+        return "No borrowed books found for this user."
 
 @app.route('/check_overdue_books')
 @librarian_required  # Assuming this decorator is used for librarian authentication
@@ -425,9 +423,10 @@ def check_overdue_books():
 @librarian_required  # Assuming this decorator is used for librarian authentication
 def revoke_book(book_id):
     book = book_issue.query.get_or_404(book_id)
+    current_user = book.user_id
     db.session.delete(book)
     db.session.commit()
-    remaining_days_entry = remaining_issue_days.query.filter_by(book_id=book_id).first()
+    remaining_days_entry = remaining_issue_days.query.filter_by(book_id=book_id,user_id=current_user ).first()
     if remaining_days_entry:
         db.session.delete(remaining_days_entry)
         db.session.commit()
@@ -495,7 +494,10 @@ def request_book(book_id):
     if borrowed_book:
         flash('You have already borrowed this book')
         return redirect(url_for('index'))
-
+    requested_book = book_request.query.filter_by(book_id=book_id, user_id=session.get('userid')).first()
+    if requested_book:
+        flash('You have already requested this book')
+        return redirect(url_for('index'))
     # Check the number of issued books
     issued_books_count = book_issue.query.filter_by(user_id=session.get('userid'), status=True).count()
     if issued_books_count >= 5:
@@ -577,7 +579,7 @@ def approve_request(book_id):
 
     if issued_books_count >= 5:
         flash('User has already issued 5 books. Cannot issue more.')
-        return redirect(url_for('librarian'))
+        return redirect(url_for('requested_books'))
 
     add_book = book_issue(book_id=book_id, user_id=requested_book.user_id, date_issued=datetime.now(), date_return=datetime.now(), status=True)
     db.session.add(add_book)
@@ -614,7 +616,26 @@ def dashboard():
 
     # Create a Donut chart for section distribution of borrowed books
     fig_donut = go.Figure(data=[go.Pie(labels=section_names, values=section_book_counts, hole=.3)])
-    fig_donut.update_layout(width=600, height=400)  # Set width and height as needed
+    fig_donut.update_layout(
+        title="Section Distribution",  # Add a title to the plot
+        title_font_size=24,  # Customize the title font size
+        title_font_color="brown",  # Customize the title font color
+        width=600,  # Set the width of the plot
+        height=400,  # Set the height of the plot
+        paper_bgcolor='rgba(0,0,0,0)',  # Set background color to be transparent
+        plot_bgcolor='rgba(0,0,0,0)',  # Set plot background color to be transparent
+        font=dict(
+            family="Arial, sans-serif",  # Customize the font family
+            size=10,  # Customize the font size
+            color="black"  # Customize the font color
+        ),
+        legend=dict(
+            orientation="v",  # Set orientation to vertical
+            x=0,  # Set x position to the left
+            y=0.5  # Set y position to the middle
+        )
+    )
+
 
     # Get all sections
     all_sections = Section.query.all()
@@ -631,7 +652,21 @@ def dashboard():
 
     # Create a Bar graph for books distribution per section
     fig_bar = go.Figure(data=[go.Bar(x=all_section_names, y=section_book_counts)])
-    fig_bar.update_layout(width=600, height=400)  # Set width and height as needed
+    fig_bar.update_layout(
+        title="Number of Books per Section",  # Add a title to the plot
+        title_font_size=24,  # Customize the title font size
+        title_font_color="brown",  # Customize the title font color
+        width=600,  # Set the width of the plot
+        height=400,  # Set the height of the plot
+        paper_bgcolor='rgba(0,0,0,0)',  # Set background color to be transparent
+        plot_bgcolor='rgba(0,0,0,0)',  # Set plot background color to be transparent
+        font=dict(
+            family="Arial, sans-serif",  # Customize the font family
+            size=14,  # Customize the font size
+            color="black"  # Customize the font color
+        )
+    )
+
 
     # Convert Plotly figures to HTML strings
     plot_html_donut = fig_donut.to_html(full_html=False)
@@ -652,12 +687,43 @@ def librarian_dashboard():
 
     # Create a Donut chart with custom dimensions for section distribution
     fig_donut = go.Figure(data=[go.Pie(labels=section_names, values=section_counts, hole=.3)])
-    fig_donut.update_layout(width=600, height=400, title='Section Distribution')
+    fig_donut.update_layout(
+        title="Section Distribution",  # Add a title to the plot
+        title_font_size=24,  # Customize the title font size
+        title_font_color="brown",  # Customize the title font color
+        width=600,  # Set the width of the plot
+        height=400,  # Set the height of the plot
+        paper_bgcolor='rgba(0,0,0,0)',  # Set background color to be transparent
+        plot_bgcolor='rgba(0,0,0,0)',  # Set plot background color to be transparent
+        font=dict(
+            family="Arial, sans-serif",  # Customize the font family
+            size=10,  # Customize the font size
+            color="black"  # Customize the font color
+        ),
+        legend=dict(
+            orientation="v",  # Set orientation to vertical
+            x=0,  # Set x position to the left
+            y=0.5  # Set y position to the middle
+        )
+    )
 
     # Create a bar graph for number of books issued per section
     books_issued_per_section = [Book.query.filter_by(section_id=section.id).join(book_issue).filter_by(status=True).count() for section in sections]
     fig_bar = go.Figure([go.Bar(x=section_names, y=books_issued_per_section)])
-    fig_bar.update_layout(title='Number of Books Issued per Section')
+    fig_bar.update_layout(
+        title="Number of Books issued per Section",  # Add a title to the plot
+        title_font_size=24,  # Customize the title font size
+        title_font_color="brown",  # Customize the title font color
+        width=600,  # Set the width of the plot
+        height=400,  # Set the height of the plot
+        paper_bgcolor='rgba(0,0,0,0)',  # Set background color to be transparent
+        plot_bgcolor='rgba(0,0,0,0)',  # Set plot background color to be transparent
+        font=dict(
+            family="Arial, sans-serif",  # Customize the font family
+            size=14,  # Customize the font size
+            color="black"  # Customize the font color
+        )
+    )
 
     # Convert Plotly figures to HTML strings
     plot_html_donut = fig_donut.to_html(full_html=False)
@@ -789,9 +855,52 @@ def library_status():
 @librarian_required  # Assuming this decorator is used for librarian authentication
 def revoke_access(book_id):
     book = book_issue.query.get_or_404(book_id)
+    current_user = book.user_id
     db.session.delete(book)
-    remaining_days_entry = remaining_issue_days.query.filter_by(id=book_id).first()
+    # Remove the entry from remaining issue days
+    remaining_days_entry = remaining_issue_days.query.filter_by(id=book_id,user_id=current_user).first()
     db.session.delete(remaining_days_entry)
     db.session.commit()
-    flash('The book has been revoked successfully.', 'success')
     return redirect(url_for('library_status'))   # Redirect back to the expired books page
+
+# Sample route for processing payment and initiating download
+
+@app.route('/process_payment', methods=['POST'])
+def process_payment():
+    book_id = request.form.get('book_id')
+    print('yes')
+    # Update the transaction history
+    action = 'Payment Made'
+    date = datetime.now()
+    new_transaction = transaction_history(book_id=book_id, user_id=session.get('userid'), date=date, action=action)
+    db.session.add(new_transaction)
+    db.session.commit()
+
+    # Simulate payment processing
+    import time
+    time.sleep(2)  # Adjust the sleep time as needed for actual payment processing time
+
+    # Modify the payment button attributes
+    return redirect(url_for('download_book_after_payment', book_id=book_id))
+
+# Route for rendering the HTML page
+@app.route('/download_book/<int:book_id>', methods=['GET'])
+def download_book(book_id):
+    return render_template('download.html', book_id=book_id)
+
+@app.route('/download_book_after_payment/<int:book_id>', methods=['GET'])
+def download_book_after_payment(book_id):
+    return render_template('download_after_payment.html', book_id=book_id)
+
+from flask import send_file
+# Route for processing download after successful payment
+@app.route('/process_download/<int:book_id>', methods=['GET'])
+def process_download(book_id):
+    # Assuming the sample.pdf file is located in the static folder
+    pdf_path = 'static/Naruto v01.pdf'
+    # You can also add logic here to check authorization or other conditions before allowing download
+    return send_file(pdf_path, as_attachment=True)
+
+@app.route('/faq')
+def faq():
+    return render_template('faq.html')

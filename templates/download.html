@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Download Book
+{% endblock %}
+
+{% block style %}
+    {{ super() }}
+    <style>
+        /* Additional styles specific to this page */
+        #download-button:hover {
+            background-color: #45a049;
+        }
+
+        .form-container {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 400px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f2f2f2;
+            margin: auto;
+        }
+
+        label {
+            padding: 12px 12px 12px 0;
+            display: inline-block;
+        }
+
+        input[type=text] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        button[type=submit] {
+            background-color:rgb(0, 169, 203);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button[type=submit]:hover {
+            background-color: #45a049;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1>Download Book</h1>
+    <p>Book ID: {{ book_id }}</p>
+
+    <!-- Sample placeholders for payment and download options -->
+    <h2>Payment Options</h2>
+    <p>Add your details:</p>
+    <div class="form-container">
+        <form id="payment-form" action="/process_payment" method="post">
+            <!-- Add your payment fields here (e.g., credit card details, payment amount) -->
+            <input type="hidden" id="book_id" name="book_id" value="{{ book_id }}">
+            <!-- Sample input fields -->
+            <label for="card_number">Card Number:</label>
+            <input type="text" id="card_number" name="card_number" required><br>
+            <label for="expiry_date">Expiry Date:</label>
+            <input type="text" id="expiry_date" name="expiry_date" required><br>
+            <label for="cvv">CVV:</label>
+            <input type="text" id="cvv" name="cvv" required><br>
+            <button id="pay-now-btn" type="submit">Pay Now</button>
+        </form>
+    </div>
+    <!-- Download button appears after payment success -->
+    <button id="download-button" style="display:none;">Download Book</button>
+
+{% endblock %}

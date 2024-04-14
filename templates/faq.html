@@ -1,0 +1,75 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    FAQ - Library Management System
+{% endblock %}
+
+{% block style %}
+    <style>
+        body{
+            background-image: url("/static/bg.avif");
+            height: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .faq-item {
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+        }
+        .question {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .answer {
+            color: #666;
+            font-size: 16px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1 class="mt-5 mb-4">Frequently Asked Questions</h1>
+    
+    <div class="faq-item">
+        <div class="question">Q: Can I search for books?</div>
+        <div class="answer">A: Yes, the library has an inbuilt search feature that allows you to search for books by both name and section.</div>
+    </div>
+    
+    <div class="faq-item">
+        <div class="question">Q: Do I get a personalized dashboard?</div>
+        <div class="answer">A: Yes, you get a personalized dashboard with graphs showing section-wise issues, including a bar graph and a donut chart.</div>
+    </div>
+    
+    <div class="faq-item">
+        <div class="question">Q: In how many days will the librarian accept my book issue request?</div>
+        <div class="answer">A: The librarian will accept your book issue request at the earliest.</div>
+    </div>
+    
+    <div class="faq-item">
+        <div class="question">Q: What happens if I don't return the book within the time period?</div>
+        <div class="answer">A: If you don't return the book within the specified time period, your access will be revoked, and you won't be able to read that book.</div>
+    </div>
+    
+    <div class="faq-item">
+        <div class="question">Q: Can I request a book for a certain amount of days?</div>
+        <div class="answer">A: Yes, you can request a book for any number of days between 1 to 7.</div>
+    </div>
+    
+    <div class="faq-item">
+        <div class="question">Q: Can I download books from the library?</div>
+        <div class="answer">A: Yes, you can download books from the library after paying a nominal fee.</div>
+    </div>
+    
+    <div class="faq-item">
+        <div class="question">Q: What is the maximum number of days I can issue a book?</div>
+        <div class="answer">A: The maximum number of days to issue a book is 7.</div>
+    </div>
+    
+    <div class="faq-item">
+        <div class="question">Q: How many books can I issue at max at a time?</div>
+        <div class="answer">A: You can issue up to 5 books at a time.</div>
+    </div>
+{% endblock %}

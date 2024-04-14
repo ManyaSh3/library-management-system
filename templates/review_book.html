@@ -8,6 +8,7 @@
         <table class="table">
             <thead>
                 <tr>
+                    <th>Requested By</th>
                     <th>Book Title</th>
                     <th>Author</th>
                     <th>Section</th>
@@ -18,12 +19,14 @@
             <tbody>
                 {% for request in requested_books %}
                     <tr>
+                        <td>{{ request.user_id }}</td>
                         <td>{{ request.books.title }}</td>
                         <td>{{ request.books.author }}</td>
                         <td>{{ request.books.section.title }}</td>
                         <td>{{ request.books.content }}</td>
                         <td>
                             <!-- Add your action buttons here -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <form action="{{ url_for('approve_request', book_id=request.books.id) }}" method="post">
                                 <button class="btn btn-success">
                                     <i class="fas fa-check"></i>
@@ -34,9 +37,10 @@
                             <form action="{{ url_for('cancel_request', book_id=request.books.id) }}" method="post">
                                 <button class="btn btn-danger">
                                     <i class="fas fa-trash"></i>
-                                    Cancel
+                                    Reject
                                 </button>
                             </form>
+                            </div>
                         </td>
                     </tr>
                 {% endfor %}

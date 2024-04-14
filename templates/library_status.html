@@ -8,6 +8,16 @@
         .btn-group .btn {
             margin-right: 5px; /* Adjust the margin as needed */
         }
+        .centered {
+            text-align: center;
+        }
+        body {
+            background-image: url("/static/bg.avif");
+            height: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
     </style>
 {% endblock %}
 
@@ -39,7 +49,7 @@
                         <td>{{ book.books.author }}</td>
                         <td>
                             {% for days in remaining_days %}
-                                {% if days.book_id == book.books.id %}
+                                {% if days.book_id == book.books.id and days.user_id == book.user_id %}
                                     {{ days.remaining_days }}
                                 {% endif %}
                             {% endfor %}
