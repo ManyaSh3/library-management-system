@@ -5,30 +5,64 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="display-2">REGISTER</h1>
-<form method="post" action="{{ url_for('register_post') }}">
-    <div class="form-group">
-    <label for="name" class="form-label">NAME</label>
-    <input type="text" name="name" class="form-control"><br>
-    </div>
+<div class="login-box">
+    <h1 class="display-3" style="text-align: center;">REGISTER</h1>
+    <form method="post" action="{{ url_for('register_post') }}">
+        <div class="form-group">
+            <label for="name" class="form-label">NAME</label>
+            <input type="text" name="name" class="form-control"><br>
+        </div>
+        <div class="form-group">
+            <label for="USERNAME" class="form-label">USERNAME</label>
+            <input type="text" name="username" class="form-control" required><br>
+        </div>
+        <div class="form-group">
+            <label for="PASSWORD" class="form-label">PASSWORD</label>
+            <input type="password" name="password" class="form-control" required><br>
+        </div>
+        <div class="form-group">
+            <label for="CONFIRM_PASSWORD" class="form-label">CONFIRM PASSWORD</label>
+            <input type="password" name="confirm_password" class="form-control" required><br>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">REGISTER</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
 
-    <div class="form-group">
-    <label for="USERNAME" class="form-label">USERNAME</label>
-    <input type="text" name="username" class="form-control" required><br>
-    </div>
+{% block style %}
+<style>
+    body {
+        background-image: url("/static/bg.avif");
+        height: 100%;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+    .login-box {
+        position: fixed;
+        width: 500px;
+        top: 50%;
+        left: 50%;
+        margin-top: 10px;
+        transform: translate(-50%, -50%);
+        background-color:none;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
 
-    <div class="form-group">
-    <label for="PASSWORD" class="form-label">PASSWORD</label>
-    <input type="password" name="password" class="form-control" required><br>
-    </div>
+    .login-box form {
+        margin-top: 2px;
+    }
 
-    <div class="form-group">
-    <label for="CONFIRM_PASSWORD" class="form-label">CONFIRM PASSWORD</label>
-    <input type="password" name="confirm_password" class="form-control" required><br>
-    </div>
+    .form-group {
+        margin-bottom: 1px;
+    }
 
-    <div class="form-group">
-    <button type="submit" class="btn btn-primary">REGISTER</button>
-    </div>
-</form>
+    .form-label {
+        font-weight: bold;
+    }
+</style>
 {% endblock %}

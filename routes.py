@@ -897,7 +897,7 @@ from flask import send_file
 @app.route('/process_download/<int:book_id>', methods=['GET'])
 def process_download(book_id):
     # Assuming the sample.pdf file is located in the static folder
-    pdf_path = 'static/Naruto v01.pdf'
+    pdf_path = 'static/book/Naruto v01.pdf'
     # You can also add logic here to check authorization or other conditions before allowing download
     return send_file(pdf_path, as_attachment=True)
 
